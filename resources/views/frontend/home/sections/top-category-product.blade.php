@@ -36,36 +36,40 @@
                                     $lastKey = [$key => $category];
                                 }
 
+                                // Ensure we have a valid lastKey
+                                $category = null;
+
                                 if (array_keys($lastKey)[0] === 'category') {
                                     $category = \App\Models\Category::find($lastKey['category']);
+                                } elseif (array_keys($lastKey)[0] === 'sub_category') {
+                                    $category = \App\Models\SubCategory::find($lastKey['sub_category']);
+                                } else {
+                                    $category = \App\Models\ChildCategory::find($lastKey['child_category']);
+                                }
+
+                                // Check if category is found
+                                if ($category) {
+                                    // Fetch products only if the category is valid
                                     $products[] = \App\Models\Product::withAvg('reviews', 'rating')
                                         ->with(['variants', 'category', 'productImageGalleries'])
                                         ->where('category_id', $category->id)
                                         ->orderBy('id', 'DESC')
                                         ->take(12)
                                         ->get();
-                                } elseif (array_keys($lastKey)[0] === 'sub_category') {
-                                    $category = \App\Models\SubCategory::find($lastKey['sub_category']);
-                                    $products[] = \App\Models\Product::withAvg('reviews', 'rating')
-                                        ->with(['variants', 'category', 'productImageGalleries'])
-                                        ->where('sub_category_id', $category->id)
-                                        ->orderBy('id', 'DESC')
-                                        ->take(12)
-                                        ->get();
-                                } else {
-                                    $category = \App\Models\ChildCategory::find($lastKey['child_category']);
-                                    $products[] = \App\Models\Product::withAvg('reviews', 'rating')
-                                        ->with(['variants', 'category', 'productImageGalleries'])
-                                        ->where('child_category_id', $category->id)
-                                        ->orderBy('id', 'DESC')
-                                        ->take(12)
-                                        ->get();
                                 }
-
                             @endphp
-                            <button class="{{ $loop->index === 0 ? 'auto_click active' : '' }}"
-                                data-filter=".category-{{ $loop->index }}">{{ $category->name }}</button>
+
+                            @if ($category)
+                                {{-- Ensure the category exists before using it --}}
+                                <button class="{{ $loop->index === 0 ? 'auto_click active' : '' }}"
+                                    data-filter=".category-{{ $loop->index }}">{{ $category->name }}</button>
+                            @else
+                                {{-- Handle case where category is not found --}}
+                                <button class="{{ $loop->index === 0 ? 'auto_click active' : '' }}" disabled>Category
+                                    Not Found</button>
+                            @endif
                         @endforeach
+
                     </div>
                 </div>
             </div>
