@@ -80,7 +80,6 @@
     <!--============================
         ELECTRONIC PART START
     ==============================-->
-    @include('frontend.home.sections.category-product-slider-three')
 
     <!--============================
         ELECTRONIC PART END
