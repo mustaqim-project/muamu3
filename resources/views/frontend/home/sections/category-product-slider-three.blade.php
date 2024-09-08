@@ -1,33 +1,30 @@
 @php
-    $categoryProductSliderSectionOne = json_decode($categoryProductSliderSectionOne->value);
+    $categoryProductSliderSectionThree = json_decode($categoryProductSliderSectionThree->value);
     $lastKey = [];
-
-    foreach($categoryProductSliderSectionOne as $key => $category){
+    
+    foreach($categoryProductSliderSectionThree as $key => $category){
         if($category === null ){
             break;
         }
         $lastKey = [$key => $category];
     }
 
-    // Filter by category name 'Service'
-    $serviceCategory = \App\Models\Category::where('name', 'Service')->first();
+    if(array_keys($lastKey)[0] === 'category'){
+        $category = \App\Models\Category::find($lastKey['category']);
+        $products = \App\Models\Product::withAvg('reviews', 'rating')->withCount('reviews')
+        ->with(['variants', 'category', 'productImageGalleries'])
+        ->where('category_id', $category->id)->orderBy('id', 'DESC')->take(12)->get();
+    }elseif(array_keys($lastKey)[0] === 'sub_category'){
+        $category = \App\Models\SubCategory::find($lastKey['sub_category']);
+        $products = \App\Models\Product::withAvg('reviews', 'rating')->withCount('reviews')
+        ->with(['variants', 'category', 'productImageGalleries'])
+        ->where('sub_category_id', $category->id)->orderBy('id', 'DESC')->take(12)->get();
 
-    if($serviceCategory) {
-        if(array_keys($lastKey)[0] === 'category'){
-            $products = \App\Models\Product::withAvg('reviews', 'rating')->withCount('reviews')
-            ->with(['variants', 'category', 'productImageGalleries'])
-            ->where('category_id', $serviceCategory->id)->orderBy('id', 'DESC')->take(12)->get();
-        } elseif(array_keys($lastKey)[0] === 'sub_category') {
-            $products = \App\Models\Product::withAvg('reviews', 'rating')->withCount('reviews')
-            ->with(['variants', 'category', 'productImageGalleries'])
-            ->where('sub_category_id', $serviceCategory->id)->orderBy('id', 'DESC')->take(12)->get();
-        } else {
-            $products = \App\Models\Product::withAvg('reviews', 'rating')->withCount('reviews')
-            ->with(['variants', 'category', 'productImageGalleries'])
-            ->where('child_category_id', $serviceCategory->id)->orderBy('id', 'DESC')->take(12)->get();
-        }
-    } else {
-        $products = collect(); // If no 'Service' category found, return an empty collection.
+    }else {
+        $category = \App\Models\ChildCategory::find($lastKey['child_category']);
+        $products = \App\Models\Product::withAvg('reviews', 'rating')->withCount('reviews')
+        ->with(['variants', 'category', 'productImageGalleries'])
+        ->where('child_category_id', $category->id)->orderBy('id', 'DESC')->take(12)->get();
     }
 @endphp
 
@@ -48,3 +45,4 @@
         </div>
     </div>
 </section>
+
